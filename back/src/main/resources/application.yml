@@ -1,0 +1,36 @@
+server:
+  port: 8888
+
+spring:
+  config:
+    import:
+      - classpath:/database.yml
+  profiles:
+    group:
+      dev:
+        - common
+        - devdb
+
+---
+spring:
+  config:
+    activate:
+      on-profile: common
+  jpa:
+    hibernate:
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+logging:
+  level:
+    org.springframework.web.filter: debug
+
+---
+spring:
+  config:
+    activate:
+      on-profile: devdb
+  jpa:
+    database-platform: org.hibernate.dialect.MySQL8Dialect
+    properties:
+      hibernate:
+        show_sql: true
