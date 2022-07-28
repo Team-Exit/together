@@ -23,14 +23,3 @@ spring:
 logging:
   level:
     org.springframework.web.filter: debug
-
----
-spring:
-  config:
-    activate:
-      on-profile: devdb
-  jpa:
-    database-platform: org.hibernate.dialect.MySQL8Dialect
-    properties:
-      hibernate:
-        show_sql: true
