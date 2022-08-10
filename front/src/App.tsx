@@ -1,4 +1,4 @@
-import NaverMap from './components/map/NaverMap';
+import NaverMap from '@components/map/NaverMap';
 
 function App() {
   return (
