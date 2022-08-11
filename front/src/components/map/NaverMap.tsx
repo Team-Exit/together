@@ -1,8 +1,8 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 function NaverMap() {
-    const mapRef = useRef<naver.maps.Map | undefined | null>();
-    const markerRef = useRef<[naver.maps.Marker]>();
+    const [markers, setMarkers] = useState<naver.maps.Marker[]>();
+    const mapRef = useRef<naver.maps.Map>();
 
     useEffect(() => {
         const initMap = () => {
@@ -18,72 +18,49 @@ function NaverMap() {
                     position: naver.maps.Position.RIGHT_TOP,
                 }
             });
-            markerRef.current = [new naver.maps.Marker({
+
+            setMarkers([new naver.maps.Marker({
                 position: new naver.maps.LatLng(37.4979517, 127.0276188),
                 map: mapRef.current,
                 animation: 2
-            })]
+            })])
+        };
 
+        initMap();
+        mapRef.current.addListener('init', () => {
             window.addEventListener('resize', () => {
                 const mapWidth = window.innerWidth;
                 const mapHeight = window.innerHeight;
                 const fixedSize = new naver.maps.Size(mapWidth, mapHeight);
-                mapRef.current.setSize(fixedSize);
+                mapRef.current?.setSize(fixedSize);
             });
-
-            mapRef.current.addListener('idle', function () {
-                updateMarkers(mapRef.current, markerRef.current)
+        })
+        naver.maps.Event.addListener(mapRef.current, 'dblclick', (e: any) => {
+            setMarkers((prev: naver.maps.Marker[]) => {
+                return [...prev, new naver.maps.Marker({
+                    position: new naver.maps.LatLng(e?.latlng._lat, e?.latlng._lng),
+                    map: mapRef.current,
+                    animation: 2
+                })]
             })
-        };
-
-        initMap();
+        })
     }, []);
-
-    const updateMarkers = (map: naver.maps.Map, markers: [naver.maps.Marker]) => {
-
-        let mapBounds = map.getBounds();
-        let marker, position;
-
-        for (let i = 0; i < markers.length; i++) {
-
-            marker = markers[i];
-            // position = marker.getPosition();
-            position = marker.getDrawingRect();
-
-            if (mapBounds.hasBounds(position)) {
-                showMarker(map, marker);
-            } else {
-                hideMarker(map, marker);
-            }
-        }
-    }
-
-    const showMarker = (map: naver.maps.Map, marker: naver.maps.Marker) => {
-
-        if (marker.getMap()) return;
-        marker.setMap(map);
-    }
-
-    const hideMarker = (map: naver.maps.Map, marker: naver.maps.Marker) => {
-
-        if (!marker.getMap()) return;
-        marker.setMap(null);
-    }
 
     useEffect(() => {
         const markerClickEvent = (marker: naver.maps.Marker) => {
             naver.maps.Event.addListener(marker, 'click', (e: any) => {
-
-                // 선택한 마커로 부드럽게 이동합니다.
-                mapRef.current.panTo(e?.coord);
+                mapRef.current.panTo(e?.coord, {
+                    duration: 500,
+                    easing: "easeOutCubic"
+                });
             })
         };
-        if (Array.isArray(markerRef.current)) {
-            for (let key of markerRef.current) {
+        if (Array.isArray(markers)) {
+            for (let key of markers) {
                 markerClickEvent(key);
             }
         }
-    }, [markerRef])
+    }, [markers])
 
     const mapStyle = {
         width: window.innerWidth,
